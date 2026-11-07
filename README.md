@@ -15,11 +15,11 @@ Live at: https://sam-michaels.github.io/fecha-abuela/
 
 Press and hold the **top-right corner** for 3 seconds. Nothing marks the spot on screen. From there you can:
 
-- choose one of six colour schemes,
-- turn the clock on or off,
-- turn the "Es de mañana / tarde / noche" line on or off.
+- **Colores**: choose one of six colour schemes,
+- **Reloj**: turn the clock on or off,
+- **Mañana / tarde / noche**: turn the "Es de mañana / tarde / noche" line on or off.
 
-The panel closes by itself after 1 minute. Settings are saved on the iPad.
+The panel is in Spanish. Tap **Listo** to close it, or it closes by itself after 1 minute. Settings are saved on the iPad.
 
 ## iPad setup
 

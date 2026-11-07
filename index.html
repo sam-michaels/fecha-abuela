@@ -163,23 +163,23 @@
 
 <div id="ajustes" class="oculto">
   <div class="caja">
-    <h2>Settings</h2>
+    <h2>Ajustes</h2>
 
-    <h3>Colours</h3>
+    <h3>Colores</h3>
     <div class="temas" id="temas"></div>
 
-    <h3>Show</h3>
+    <h3>Mostrar</h3>
     <div class="fila">
-      <span>Clock</span>
+      <span>Reloj</span>
       <button class="interruptor" id="btn-reloj" type="button"></button>
     </div>
     <div class="fila">
-      <span>Morning / afternoon / night</span>
+      <span>Mañana / tarde / noche</span>
       <button class="interruptor" id="btn-momento" type="button"></button>
     </div>
 
-    <button id="cerrar" type="button">Done</button>
-    <p class="nota">Opens by holding the top-right corner for 3 seconds. Closes by itself after 1 minute.</p>
+    <button id="cerrar" type="button">Listo</button>
+    <p class="nota">Se abre al mantener presionada la esquina de arriba a la derecha por 3 segundos. Se cierra sola después de 1 minuto.</p>
   </div>
 </div>
 
@@ -195,12 +195,12 @@
                'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
   var TEMAS = [
-    { id: 'crema',    nombre: 'Cream',  bg: '#fdf6e3', fg: '#1a1a1a' },
-    { id: 'noche',    nombre: 'Night',  bg: '#000000', fg: '#ffffff' },
-    { id: 'azul',     nombre: 'Blue',   bg: '#0d2a5c', fg: '#ffffff' },
-    { id: 'amarillo', nombre: 'Yellow', bg: '#ffe14d', fg: '#000000' },
-    { id: 'verde',    nombre: 'Green',  bg: '#1b4d2e', fg: '#ffffff' },
-    { id: 'rosa',     nombre: 'Pink',   bg: '#fde4ec', fg: '#3b0a1e' }
+    { id: 'crema',    nombre: 'Crema',  bg: '#fdf6e3', fg: '#1a1a1a' },
+    { id: 'noche',    nombre: 'Noche',  bg: '#000000', fg: '#ffffff' },
+    { id: 'azul',     nombre: 'Azul',   bg: '#0d2a5c', fg: '#ffffff' },
+    { id: 'amarillo', nombre: 'Amarillo', bg: '#ffe14d', fg: '#000000' },
+    { id: 'verde',    nombre: 'Verde',  bg: '#1b4d2e', fg: '#ffffff' },
+    { id: 'rosa',     nombre: 'Rosa',   bg: '#fde4ec', fg: '#3b0a1e' }
   ];
 
   var ajustes = { tema: 'crema', reloj: true, momento: true };
@@ -316,7 +316,7 @@
   // ---- On/off switches ----
   function pintarInterruptor(id, encendido) {
     var b = $(id);
-    b.textContent = encendido ? 'On' : 'Off';
+    b.textContent = encendido ? 'Sí' : 'No';
     b.className = 'interruptor' + (encendido ? ' encendido' : '');
   }
   function pintarInterruptores() {
