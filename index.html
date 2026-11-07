@@ -262,6 +262,7 @@
     <div id="tamanos"></div>
     <button id="restablecer" type="button">Volver a los tamaños originales</button>
 
+    <p class="nota">Versión <span id="version"></span></p>
     <p class="nota">Para abrir los ajustes: toque la pantalla con 5 dedos a la vez y luego toque el engranaje que aparece abajo a la derecha. Se cierran solos después de 1 minuto.</p>
   </div>
 </div>
@@ -270,6 +271,10 @@
 // Written in plain ES5 so it runs on Safari for iOS 12.
 (function () {
   'use strict';
+
+  // Change this on every update. Installed copies compare it with the
+  // live site to know when to reload themselves.
+  var VERSION = '2026-11-07 14:02';
 
   // Spanish names are written out by hand so the text never depends on
   // the iPad's language settings.
@@ -342,6 +347,26 @@
     return h + ':' + (m < 10 ? '0' : '') + m + ' ' + sufijo;
   }
 
+  // ---- Self-update ----
+  var versionNueva = null;
+  function buscarActualizacion() {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'index.html?t=' + Date.now(), true);
+      xhr.onload = function () {
+        var texto = xhr.responseText || '';
+        var m = /var VERSION = '([^']+)'/.exec(texto);
+        // Only trust a real copy of this page (not a Wi-Fi login page, etc.).
+        if (xhr.status === 200 && m && m[1] !== VERSION && texto.indexOf('id="pantalla"') !== -1) {
+          versionNueva = m[1];
+          ultimo = '';   // force a full check right away
+          actualizar();
+        }
+      };
+      xhr.send();
+    } catch (e) { /* offline: try again next hour */ }
+  }
+
   // ---- Night ----
   function esDeNoche(ahora) {
     if (!ajustes.noche || ajustes.desde === ajustes.hasta) return false;
@@ -367,6 +392,15 @@
     ultimo = clave;
 
     document.documentElement.className = estado;
+
+    // A newer version is waiting: reload while the screen is black (or at
+    // 3 a.m. if night mode is off), so grandma never sees it happen.
+    if (versionNueva && $('ajustes').className === 'oculto' &&
+        (estado === 'oscuro' || (!ajustes.noche && ahora.getHours() === 3))) {
+      // A new address skips any saved copy of the page.
+      window.location.replace(window.location.pathname + '?v=' + encodeURIComponent(versionNueva));
+      return;
+    }
 
     $('dia').textContent = DIAS[ahora.getDay()];
     $('fecha').textContent = ahora.getDate() + ' de ' + MESES[ahora.getMonth()] + ' de ' + ahora.getFullYear();
@@ -549,6 +583,7 @@
     pintarAjustes();
     pintarTamanos();
     prepararGesto();
+    $('version').textContent = VERSION;
 
     $('btn-reloj').onclick = function () {
       ajustes.reloj = !ajustes.reloj;
@@ -572,6 +607,10 @@
     window.addEventListener('focus', actualizar, false);
     window.addEventListener('resize', alGirar, false);
     window.addEventListener('orientationchange', alGirar, false);
+
+    // Look for a newer version 1 minute after starting, then every hour.
+    setTimeout(buscarActualizacion, 60000);
+    setInterval(buscarActualizacion, 3600000);
   }
 
   iniciar();

@@ -34,6 +34,12 @@ If the gear never appears, turn off **Settings → General → Multitasking & Do
 3. Optional: **Settings → General → Accessibility → Guided Access** turns on a mode that locks the iPad to this one app. Start it by triple-clicking the Home button while the app is open.
 4. Check that **Settings → General → Date & Time → Set Automatically** is on, so the date is always right.
 
+## Updates
+
+The installed app checks the live site every hour. When it finds a newer version, it reloads itself the next time the screen is black at night (or at 3 a.m. if night mode is off), so nobody has to touch the iPad. The version running is shown at the bottom of Ajustes.
+
+**When changing `index.html`, also change `var VERSION = '...'`** (e.g. to the current date and time). Installed copies only update when that text changes.
+
 ## Testing
 
 Add `?prueba=YYYY-MM-DDTHH:MM` to the URL to preview a given moment, e.g. `index.html?prueba=2026-09-30T08:05`.
