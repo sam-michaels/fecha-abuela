@@ -51,23 +51,33 @@
     padding: 0 4vw;
     box-sizing: border-box;
   }
-  .linea { margin: 0; line-height: 1.1; white-space: nowrap; }
-  #hoy-es  { font-size: 6vmin; opacity: 0.8; margin-bottom: 1vmin; }
-  #dia     { font-size: 17vmin; font-weight: 800; text-transform: uppercase; color: var(--accent); letter-spacing: 0.02em; }
-  #fecha   { font-size: 8vmin; font-weight: 600; margin-top: 2vmin; }
-  #momento { font-size: 6.5vmin; margin-top: 5vmin; }
-  #reloj   { font-size: 9vmin; font-weight: 700; margin-top: 2vmin; }
-  .oculto  { display: none !important; }
+  /* Font sizes are set from the script, so each line can be resized in settings. */
+  .linea    { margin: 0; line-height: 1.1; white-space: nowrap; }
+  #hoy-es   { opacity: 0.8; margin-bottom: 1vmin; }
+  #dia      { font-weight: 800; text-transform: uppercase; color: var(--accent); letter-spacing: 0.02em; }
+  #fecha    { font-weight: 600; margin-top: 2vmin; }
+  #etiqueta { opacity: 0.8; margin-top: 5vmin; }
+  #reloj    { font-weight: 700; margin-top: 1vmin; }
+  .oculto   { display: none !important; }
 
-  /* Hidden corner: hold for 3 seconds to open settings */
-  #esquina {
+  /* Small gear that appears for 5 seconds after a 5-finger touch */
+  #engranaje {
     position: fixed;
-    top: 0;
-    right: 0;
-    width: 110px;
-    height: 110px;
+    right: 16px;
+    bottom: 16px;
+    width: 64px;
+    height: 64px;
+    padding: 12px;
+    box-sizing: border-box;
+    border: none;
+    background: transparent;
+    color: var(--fg);
+    opacity: 0.45;
     z-index: 5;
+    -webkit-appearance: none;
+    cursor: pointer;
   }
+  #engranaje svg { display: block; width: 100%; height: 100%; }
 
   /* Settings panel (for family, not for grandma) */
   #ajustes {
@@ -87,20 +97,23 @@
     background: #ffffff;
     color: #111111;
     border-radius: 16px;
-    padding: 24px 28px;
-    width: 90%;
-    max-width: 560px;
+    padding: 20px 26px;
+    width: 92%;
+    max-width: 600px;
+    max-height: 94%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     box-sizing: border-box;
-    font-size: 20px;
+    font-size: 19px;
   }
-  #ajustes h2 { margin: 0 0 16px; font-size: 26px; }
-  #ajustes h3 { margin: 20px 0 10px; font-size: 20px; }
+  #ajustes h2 { margin: 0; font-size: 26px; }
+  #ajustes h3 { margin: 16px 0 8px; font-size: 20px; }
   .temas { overflow: hidden; }
   .tema-btn {
     float: left;
     width: 30%;
     margin: 0 3% 3% 0;
-    padding: 14px 4px;
+    padding: 12px 4px;
     border: 3px solid #cccccc;
     border-radius: 10px;
     font-size: 17px;
@@ -117,7 +130,7 @@
     align-items: center;
     -webkit-justify-content: space-between;
     justify-content: space-between;
-    padding: 6px 0;
+    padding: 4px 0;
   }
   .interruptor {
     -webkit-appearance: none;
@@ -132,12 +145,41 @@
     cursor: pointer;
   }
   .interruptor.encendido { background: #2e7d32; border-color: #2e7d32; color: #ffffff; }
+  .tamano {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+  }
+  .tamano button {
+    -webkit-appearance: none;
+    width: 48px;
+    height: 44px;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+    border: 2px solid #999999;
+    border-radius: 10px;
+    background: #eeeeee;
+    color: #111111;
+    cursor: pointer;
+  }
+  .tamano span { display: inline-block; width: 70px; text-align: center; font-weight: 600; }
+  #restablecer {
+    -webkit-appearance: none;
+    margin-top: 6px;
+    padding: 8px 14px;
+    font-size: 16px;
+    border: 2px solid #999999;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #333333;
+    cursor: pointer;
+  }
   #cerrar {
     -webkit-appearance: none;
-    display: block;
-    width: 100%;
-    margin-top: 24px;
-    padding: 14px;
+    padding: 12px 32px;
     font-size: 20px;
     font-weight: 700;
     border: none;
@@ -146,7 +188,7 @@
     color: #ffffff;
     cursor: pointer;
   }
-  .nota { font-size: 14px; color: #666666; margin-top: 12px; }
+  .nota { font-size: 14px; color: #666666; margin: 16px 0 0; }
 </style>
 </head>
 <body class="tema-crema">
@@ -155,15 +197,21 @@
   <p class="linea" id="hoy-es">Hoy es</p>
   <p class="linea" id="dia"></p>
   <p class="linea" id="fecha"></p>
-  <p class="linea" id="momento"></p>
+  <p class="linea" id="etiqueta">Y la hora es</p>
   <p class="linea" id="reloj"></p>
 </div>
 
-<div id="esquina" aria-hidden="true"></div>
+<button id="engranaje" class="oculto" type="button" aria-label="Ajustes">
+  <!-- Gear icon from Google's Material Icons (Apache 2.0) -->
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+</button>
 
 <div id="ajustes" class="oculto">
   <div class="caja">
-    <h2>Ajustes</h2>
+    <div class="fila">
+      <h2>Ajustes</h2>
+      <button id="cerrar" type="button">Listo</button>
+    </div>
 
     <h3>Colores</h3>
     <div class="temas" id="temas"></div>
@@ -173,13 +221,12 @@
       <span>Reloj</span>
       <button class="interruptor" id="btn-reloj" type="button"></button>
     </div>
-    <div class="fila">
-      <span>Mañana / tarde / noche</span>
-      <button class="interruptor" id="btn-momento" type="button"></button>
-    </div>
 
-    <button id="cerrar" type="button">Listo</button>
-    <p class="nota">Se abre al mantener presionada la esquina de arriba a la derecha por 3 segundos. Se cierra sola después de 1 minuto.</p>
+    <h3>Tamaño de letra</h3>
+    <div id="tamanos"></div>
+    <button id="restablecer" type="button">Volver a los tamaños originales</button>
+
+    <p class="nota">Para abrir los ajustes: toque la pantalla con 5 dedos a la vez y luego toque el engranaje que aparece abajo a la derecha. Se cierran solos después de 1 minuto.</p>
   </div>
 </div>
 
@@ -195,17 +242,32 @@
                'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
   var TEMAS = [
-    { id: 'crema',    nombre: 'Crema',  bg: '#fdf6e3', fg: '#1a1a1a' },
-    { id: 'noche',    nombre: 'Noche',  bg: '#000000', fg: '#ffffff' },
-    { id: 'azul',     nombre: 'Azul',   bg: '#0d2a5c', fg: '#ffffff' },
+    { id: 'crema',    nombre: 'Crema',    bg: '#fdf6e3', fg: '#1a1a1a' },
+    { id: 'noche',    nombre: 'Noche',    bg: '#000000', fg: '#ffffff' },
+    { id: 'azul',     nombre: 'Azul',     bg: '#0d2a5c', fg: '#ffffff' },
     { id: 'amarillo', nombre: 'Amarillo', bg: '#ffe14d', fg: '#000000' },
-    { id: 'verde',    nombre: 'Verde',  bg: '#1b4d2e', fg: '#ffffff' },
-    { id: 'rosa',     nombre: 'Rosa',   bg: '#fde4ec', fg: '#3b0a1e' }
+    { id: 'verde',    nombre: 'Verde',    bg: '#1b4d2e', fg: '#ffffff' },
+    { id: 'rosa',     nombre: 'Rosa',     bg: '#fde4ec', fg: '#3b0a1e' }
   ];
 
-  var ajustes = { tema: 'crema', reloj: true, momento: true };
+  // Each line on screen, with its normal size (in % of the screen's short side).
+  var LINEAS = [
+    { id: 'hoy-es',   nombre: 'Hoy es',       base: 6 },
+    { id: 'dia',      nombre: 'Día',          base: 17 },
+    { id: 'fecha',    nombre: 'Fecha',        base: 8 },
+    { id: 'etiqueta', nombre: 'Y la hora es', base: 6 },
+    { id: 'reloj',    nombre: 'Hora',         base: 9 }
+  ];
+  var PASO = 10, MINIMO = 50, MAXIMO = 250;   // size steps, in %
+
+  var ajustes = { tema: 'crema', reloj: true, tam: {} };
 
   function $(id) { return document.getElementById(id); }
+
+  function tamDe(id) {
+    var t = ajustes.tam[id];
+    return (typeof t === 'number' && t >= MINIMO && t <= MAXIMO) ? t : 100;
+  }
 
   // ---- Saved settings (localStorage can throw in private mode) ----
   function cargar() {
@@ -213,7 +275,7 @@
       var guardado = JSON.parse(window.localStorage.getItem('ajustes') || '{}');
       if (typeof guardado.tema === 'string') ajustes.tema = guardado.tema;
       if (typeof guardado.reloj === 'boolean') ajustes.reloj = guardado.reloj;
-      if (typeof guardado.momento === 'boolean') ajustes.momento = guardado.momento;
+      if (guardado.tam && typeof guardado.tam === 'object') ajustes.tam = guardado.tam;
     } catch (e) { /* keep defaults */ }
   }
   function guardar() {
@@ -229,12 +291,6 @@
   }
 
   // ---- What the screen says ----
-  function momentoDelDia(hora) {
-    if (hora >= 5 && hora < 12) return 'Es de mañana';
-    if (hora >= 12 && hora < 20) return 'Es de tarde';
-    return 'Es de noche';
-  }
-
   function horaDoce(ahora) {
     var h = ahora.getHours();
     var m = ahora.getMinutes();
@@ -249,24 +305,26 @@
     var ahora = new Date(Date.now() + desfase);
     // Only touch the page when the minute (or a setting) has changed.
     var clave = ahora.getFullYear() + '-' + ahora.getMonth() + '-' + ahora.getDate() +
-                ' ' + ahora.getHours() + ':' + ahora.getMinutes() +
-                ' ' + ajustes.reloj + ajustes.momento;
+                ' ' + ahora.getHours() + ':' + ahora.getMinutes() + ' ' + JSON.stringify(ajustes);
     if (clave === ultimo) return;
     ultimo = clave;
 
     $('dia').textContent = DIAS[ahora.getDay()];
     $('fecha').textContent = ahora.getDate() + ' de ' + MESES[ahora.getMonth()] + ' de ' + ahora.getFullYear();
-    $('momento').textContent = momentoDelDia(ahora.getHours());
     $('reloj').textContent = horaDoce(ahora);
 
-    $('momento').className = 'linea' + (ajustes.momento ? '' : ' oculto');
-    $('reloj').className = 'linea' + (ajustes.reloj ? '' : ' oculto');
+    // "Y la hora es" belongs to the clock, so both show or hide together.
+    var claseReloj = 'linea' + (ajustes.reloj ? '' : ' oculto');
+    $('etiqueta').className = claseReloj;
+    $('reloj').className = claseReloj;
 
-    caber($('dia'), 17);
-    caber($('fecha'), 8);
+    for (var i = 0; i < LINEAS.length; i++) {
+      caber($(LINEAS[i].id), LINEAS[i].base * tamDe(LINEAS[i].id) / 100);
+    }
   }
 
-  // Shrink a line until it fits the screen width (e.g. "MIÉRCOLES" upright).
+  // Use the chosen size, but shrink a line if it would run off the screen
+  // (e.g. "MIÉRCOLES" with the iPad upright).
   function caber(el, base) {
     var max = $('pantalla').clientWidth * 0.92;
     var tam = base;
@@ -313,20 +371,49 @@
     }
   }
 
-  // ---- On/off switches ----
-  function pintarInterruptor(id, encendido) {
-    var b = $(id);
-    b.textContent = encendido ? 'Sí' : 'No';
-    b.className = 'interruptor' + (encendido ? ' encendido' : '');
+  // ---- Font size per line ----
+  function crearControlesTamano() {
+    var contenedor = $('tamanos');
+    for (var i = 0; i < LINEAS.length; i++) {
+      var fila = document.createElement('div');
+      fila.className = 'fila';
+      fila.innerHTML =
+        '<span>' + LINEAS[i].nombre + '</span>' +
+        '<span class="tamano">' +
+          '<button type="button" data-id="' + LINEAS[i].id + '" data-cambio="-1" aria-label="Más pequeño">&minus;</button>' +
+          '<span id="tam-' + LINEAS[i].id + '"></span>' +
+          '<button type="button" data-id="' + LINEAS[i].id + '" data-cambio="1" aria-label="Más grande">+</button>' +
+        '</span>';
+      contenedor.appendChild(fila);
+    }
+    var botones = contenedor.getElementsByTagName('button');
+    for (var j = 0; j < botones.length; j++) {
+      botones[j].onclick = function () {
+        var id = this.getAttribute('data-id');
+        var nuevo = tamDe(id) + PASO * (+this.getAttribute('data-cambio'));
+        if (nuevo < MINIMO || nuevo > MAXIMO) return;
+        ajustes.tam[id] = nuevo;
+        guardar(); pintarTamanos(); actualizar(); reiniciarCierre();
+      };
+    }
   }
-  function pintarInterruptores() {
-    pintarInterruptor('btn-reloj', ajustes.reloj);
-    pintarInterruptor('btn-momento', ajustes.momento);
+  function pintarTamanos() {
+    for (var i = 0; i < LINEAS.length; i++) {
+      $('tam-' + LINEAS[i].id).textContent = tamDe(LINEAS[i].id) + ' %';
+    }
+  }
+
+  // ---- On/off switch ----
+  function pintarInterruptor() {
+    var b = $('btn-reloj');
+    b.textContent = ajustes.reloj ? 'Sí' : 'No';
+    b.className = 'interruptor' + (ajustes.reloj ? ' encendido' : '');
   }
 
   // ---- Settings panel ----
   var cierreAuto = null;
   function abrirAjustes() {
+    ocultarEngranaje();
     $('ajustes').className = '';
     reiniciarCierre();
   }
@@ -340,44 +427,51 @@
     cierreAuto = setTimeout(cerrarAjustes, 60000);
   }
 
-  // ---- Hold the hidden corner for 3 seconds ----
-  function prepararEsquina() {
-    var esquina = $('esquina');
-    var temporizador = null;
-    function empezar(e) {
-      if (e && e.preventDefault) e.preventDefault();
-      clearTimeout(temporizador);
-      temporizador = setTimeout(abrirAjustes, 3000);
-    }
-    function cancelar() { clearTimeout(temporizador); }
-    esquina.addEventListener('touchstart', empezar, false);
-    esquina.addEventListener('touchend', cancelar, false);
-    esquina.addEventListener('touchcancel', cancelar, false);
-    esquina.addEventListener('touchmove', cancelar, false);
-    // Mouse too, for testing on a computer
-    esquina.addEventListener('mousedown', empezar, false);
-    esquina.addEventListener('mouseup', cancelar, false);
-    esquina.addEventListener('mouseleave', cancelar, false);
+  // ---- 5 fingers at once shows the gear for 5 seconds ----
+  var temporizadorEngranaje = null;
+  function mostrarEngranaje() {
+    if ($('ajustes').className !== 'oculto') return;
+    $('engranaje').className = '';
+    clearTimeout(temporizadorEngranaje);
+    temporizadorEngranaje = setTimeout(ocultarEngranaje, 5000);
+  }
+  function ocultarEngranaje() {
+    clearTimeout(temporizadorEngranaje);
+    $('engranaje').className = 'oculto';
+  }
+  function prepararGesto() {
+    // Fingers never land at exactly the same moment, so check on every new
+    // touch whether 5 or more are now on the screen.
+    document.addEventListener('touchstart', function (e) {
+      if (e.touches && e.touches.length >= 5) mostrarEngranaje();
+    }, false);
+    // On a computer: press the A key (for "ajustes").
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'a' || e.key === 'A' || e.keyCode === 65) mostrarEngranaje();
+    }, false);
+    $('engranaje').onclick = abrirAjustes;
   }
 
   function iniciar() {
     cargar();
     crearBotonesTema();
+    crearControlesTamano();
     aplicarTema();
-    pintarInterruptores();
-    prepararEsquina();
+    pintarInterruptor();
+    pintarTamanos();
+    prepararGesto();
 
     $('btn-reloj').onclick = function () {
       ajustes.reloj = !ajustes.reloj;
-      guardar(); pintarInterruptores(); actualizar(); reiniciarCierre();
+      guardar(); pintarInterruptor(); actualizar(); reiniciarCierre();
     };
-    $('btn-momento').onclick = function () {
-      ajustes.momento = !ajustes.momento;
-      guardar(); pintarInterruptores(); actualizar(); reiniciarCierre();
+    $('restablecer').onclick = function () {
+      ajustes.tam = {};
+      guardar(); pintarTamanos(); actualizar(); reiniciarCierre();
     };
     $('cerrar').onclick = cerrarAjustes;
 
-    // Stop pinch-zoom and double-tap zoom, which Safari allows despite the meta tag.
+    // Stop pinch-zoom, which Safari allows despite the meta tag.
     document.addEventListener('gesturestart', function (e) { e.preventDefault(); }, false);
 
     actualizar();

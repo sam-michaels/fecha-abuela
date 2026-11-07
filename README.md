@@ -6,20 +6,24 @@ Live at: https://sam-michaels.github.io/fecha-abuela/
 
 ## What it shows
 
+- **Hoy es**
 - The day of the week (big), e.g. **SÁBADO**
 - The date, e.g. *7 de noviembre de 2026*
-- Part of the day: *Es de mañana* (5:00–11:59), *Es de tarde* (12:00–19:59), *Es de noche* (20:00–4:59)
-- A 12-hour clock without seconds, e.g. *10:45 a. m.*
+- **Y la hora es** and a 12-hour clock without seconds, e.g. *3:30 p. m.*
 
 ## Settings
 
-Press and hold the **top-right corner** for 3 seconds. Nothing marks the spot on screen. From there you can:
+Touch the screen with **5 fingers at once**. A small gear appears in the bottom-right corner for 5 seconds; tap it. On a computer, press the **A** key instead.
 
-- **Colores**: choose one of six colour schemes,
-- **Reloj**: turn the clock on or off,
-- **Mañana / tarde / noche**: turn the "Es de mañana / tarde / noche" line on or off.
+The panel is in Spanish:
 
-The panel is in Spanish. Tap **Listo** to close it, or it closes by itself after 1 minute. Settings are saved on the iPad.
+- **Colores**: one of six colour schemes
+- **Reloj**: show or hide the clock and its "Y la hora es" line
+- **Tamaño de letra**: make each line bigger or smaller (50–250 %). Lines that would run off the screen still shrink to fit.
+
+Tap **Listo** to close it, or it closes by itself after 1 minute. Settings are saved on the iPad.
+
+If the gear never appears, turn off **Settings → General → Multitasking & Dock → Gestures** on the iPad. Those system gestures use 4–5 fingers and can catch the touch first.
 
 ## iPad setup
 
