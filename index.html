@@ -60,6 +60,17 @@
   #reloj    { font-weight: 700; margin-top: 1vmin; }
   .oculto   { display: none !important; }
 
+  /* Night: a black cover over everything. A touch shows the date dimly for 1 minute. */
+  #negro {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #000000;
+    z-index: 4;
+  }
+  html.oscuro #negro { display: block; }
+  html.tenue body { --bg: #000000; --fg: #6e6e6e; --accent: #8a6020; }
+
   /* Small gear that appears for 5 seconds after a 5-finger touch */
   #engranaje {
     position: fixed;
@@ -165,7 +176,7 @@
     color: #111111;
     cursor: pointer;
   }
-  .tamano span { display: inline-block; width: 70px; text-align: center; font-weight: 600; }
+  .tamano span { display: inline-block; width: 100px; text-align: center; font-weight: 600; }
   #restablecer {
     -webkit-appearance: none;
     margin-top: 6px;
@@ -201,6 +212,8 @@
   <p class="linea" id="reloj"></p>
 </div>
 
+<div id="negro"></div>
+
 <button id="engranaje" class="oculto" type="button" aria-label="Ajustes">
   <!-- Gear icon from Google's Material Icons (Apache 2.0) -->
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
@@ -221,6 +234,29 @@
       <span>Reloj</span>
       <button class="interruptor" id="btn-reloj" type="button"></button>
     </div>
+
+    <h3>Horario de noche</h3>
+    <div class="fila">
+      <span>Pantalla negra de noche</span>
+      <button class="interruptor" id="btn-noche" type="button"></button>
+    </div>
+    <div class="fila">
+      <span>Desde</span>
+      <span class="tamano">
+        <button type="button" data-hora="desde" data-cambio="-1" aria-label="Más temprano">&minus;</button>
+        <span id="hora-desde"></span>
+        <button type="button" data-hora="desde" data-cambio="1" aria-label="Más tarde">+</button>
+      </span>
+    </div>
+    <div class="fila">
+      <span>Hasta</span>
+      <span class="tamano">
+        <button type="button" data-hora="hasta" data-cambio="-1" aria-label="Más temprano">&minus;</button>
+        <span id="hora-hasta"></span>
+        <button type="button" data-hora="hasta" data-cambio="1" aria-label="Más tarde">+</button>
+      </span>
+    </div>
+    <p class="nota" style="margin-top:4px">Si se toca la pantalla negra, muestra la fecha por 1 minuto.</p>
 
     <h3>Tamaño de letra</h3>
     <div id="tamanos"></div>
@@ -260,7 +296,8 @@
   ];
   var PASO = 10, MINIMO = 50, MAXIMO = 250;   // size steps, in %
 
-  var ajustes = { tema: 'crema', reloj: true, tam: {} };
+  // noche: black screen between 'desde' and 'hasta' (hours, 0-23).
+  var ajustes = { tema: 'crema', reloj: true, tam: {}, noche: true, desde: 22, hasta: 8 };
 
   function $(id) { return document.getElementById(id); }
 
@@ -269,6 +306,8 @@
     return (typeof t === 'number' && t >= MINIMO && t <= MAXIMO) ? t : 100;
   }
 
+  function horaValida(h) { return typeof h === 'number' && h >= 0 && h <= 23 && h % 1 === 0; }
+
   // ---- Saved settings (localStorage can throw in private mode) ----
   function cargar() {
     try {
@@ -276,6 +315,9 @@
       if (typeof guardado.tema === 'string') ajustes.tema = guardado.tema;
       if (typeof guardado.reloj === 'boolean') ajustes.reloj = guardado.reloj;
       if (guardado.tam && typeof guardado.tam === 'object') ajustes.tam = guardado.tam;
+      if (typeof guardado.noche === 'boolean') ajustes.noche = guardado.noche;
+      if (horaValida(guardado.desde)) ajustes.desde = guardado.desde;
+      if (horaValida(guardado.hasta)) ajustes.hasta = guardado.hasta;
     } catch (e) { /* keep defaults */ }
   }
   function guardar() {
@@ -300,14 +342,31 @@
     return h + ':' + (m < 10 ? '0' : '') + m + ' ' + sufijo;
   }
 
+  // ---- Night ----
+  function esDeNoche(ahora) {
+    if (!ajustes.noche || ajustes.desde === ajustes.hasta) return false;
+    var h = ahora.getHours();
+    if (ajustes.desde > ajustes.hasta) return h >= ajustes.desde || h < ajustes.hasta; // crosses midnight
+    return h >= ajustes.desde && h < ajustes.hasta;
+  }
+  var despiertoHasta = 0;
+  function despertar() {
+    despiertoHasta = Date.now() + 60000;
+    actualizar();
+  }
+
   var ultimo = '';
   function actualizar() {
     var ahora = new Date(Date.now() + desfase);
-    // Only touch the page when the minute (or a setting) has changed.
+    // '' = day, 'oscuro' = black night screen, 'tenue' = dim date after a touch at night
+    var estado = esDeNoche(ahora) ? (Date.now() < despiertoHasta ? 'tenue' : 'oscuro') : '';
+    // Only touch the page when the minute, the night state or a setting has changed.
     var clave = ahora.getFullYear() + '-' + ahora.getMonth() + '-' + ahora.getDate() +
-                ' ' + ahora.getHours() + ':' + ahora.getMinutes() + ' ' + JSON.stringify(ajustes);
+                ' ' + ahora.getHours() + ':' + ahora.getMinutes() + ' ' + estado + ' ' + JSON.stringify(ajustes);
     if (clave === ultimo) return;
     ultimo = clave;
+
+    document.documentElement.className = estado;
 
     $('dia').textContent = DIAS[ahora.getDay()];
     $('fecha').textContent = ahora.getDate() + ' de ' + MESES[ahora.getMonth()] + ' de ' + ahora.getFullYear();
@@ -403,11 +462,39 @@
     }
   }
 
-  // ---- On/off switch ----
-  function pintarInterruptor() {
-    var b = $('btn-reloj');
-    b.textContent = ajustes.reloj ? 'Sí' : 'No';
-    b.className = 'interruptor' + (ajustes.reloj ? ' encendido' : '');
+  // ---- On/off switches and night hours ----
+  function pintarInterruptor(id, encendido) {
+    var b = $(id);
+    b.textContent = encendido ? 'Sí' : 'No';
+    b.className = 'interruptor' + (encendido ? ' encendido' : '');
+  }
+  function horaCorta(h) {
+    var sufijo = h < 12 ? 'a. m.' : 'p. m.';
+    var x = h % 12;
+    return (x === 0 ? 12 : x) + ' ' + sufijo;
+  }
+  function pintarAjustes() {
+    pintarInterruptor('btn-reloj', ajustes.reloj);
+    pintarInterruptor('btn-noche', ajustes.noche);
+    $('hora-desde').textContent = horaCorta(ajustes.desde);
+    $('hora-hasta').textContent = horaCorta(ajustes.hasta);
+  }
+  function crearControlesNoche() {
+    var botones = document.querySelectorAll('[data-hora]');
+    for (var i = 0; i < botones.length; i++) {
+      botones[i].onclick = function () {
+        var cual = this.getAttribute('data-hora');
+        ajustes[cual] = (ajustes[cual] + (+this.getAttribute('data-cambio')) + 24) % 24;
+        guardar(); pintarAjustes(); actualizar(); reiniciarCierre();
+      };
+    }
+    $('btn-noche').onclick = function () {
+      ajustes.noche = !ajustes.noche;
+      guardar(); pintarAjustes(); actualizar(); reiniciarCierre();
+    };
+    // A touch (or click) on the black screen shows the date for 1 minute.
+    $('negro').addEventListener('touchstart', despertar, false);
+    $('negro').addEventListener('click', despertar, false);
   }
 
   // ---- Settings panel ----
@@ -420,6 +507,7 @@
   function cerrarAjustes() {
     $('ajustes').className = 'oculto';
     clearTimeout(cierreAuto);
+    despertar();   // at night, show the screen for a minute so changes can be checked
   }
   // Close the panel by itself so it never stays open on grandma's screen.
   function reiniciarCierre() {
@@ -456,14 +544,15 @@
     cargar();
     crearBotonesTema();
     crearControlesTamano();
+    crearControlesNoche();
     aplicarTema();
-    pintarInterruptor();
+    pintarAjustes();
     pintarTamanos();
     prepararGesto();
 
     $('btn-reloj').onclick = function () {
       ajustes.reloj = !ajustes.reloj;
-      guardar(); pintarInterruptor(); actualizar(); reiniciarCierre();
+      guardar(); pintarAjustes(); actualizar(); reiniciarCierre();
     };
     $('restablecer').onclick = function () {
       ajustes.tam = {};
