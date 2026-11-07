@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Hoy es</title>
+<!-- Full screen when opened from the iPad home screen -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hoy es">
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+  /* Kept to CSS that Safari on iOS 12 supports (no flex gap, no clamp). */
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+
+  /* Colour schemes */
+  body, body.tema-crema { --bg: #fdf6e3; --fg: #1a1a1a; --accent: #7a3e00; }
+  body.tema-noche       { --bg: #000000; --fg: #ffffff; --accent: #ffd54f; }
+  body.tema-azul        { --bg: #0d2a5c; --fg: #ffffff; --accent: #ffe082; }
+  body.tema-amarillo    { --bg: #ffe14d; --fg: #000000; --accent: #6a1b9a; }
+  body.tema-verde       { --bg: #1b4d2e; --fg: #ffffff; --accent: #c5e1a5; }
+  body.tema-rosa        { --bg: #fde4ec; --fg: #3b0a1e; --accent: #ad1457; }
+
+  #pantalla {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    -webkit-justify-content: center;
+    justify-content: center;
+    -webkit-align-items: center;
+    align-items: center;
+    height: 100%;
+    text-align: center;
+    padding: 0 4vw;
+    box-sizing: border-box;
+  }
+  .linea { margin: 0; line-height: 1.1; white-space: nowrap; }
+  #hoy-es  { font-size: 6vmin; opacity: 0.8; margin-bottom: 1vmin; }
+  #dia     { font-size: 17vmin; font-weight: 800; text-transform: uppercase; color: var(--accent); letter-spacing: 0.02em; }
+  #fecha   { font-size: 8vmin; font-weight: 600; margin-top: 2vmin; }
+  #momento { font-size: 6.5vmin; margin-top: 5vmin; }
+  #reloj   { font-size: 9vmin; font-weight: 700; margin-top: 2vmin; }
+  .oculto  { display: none !important; }
+
+  /* Hidden corner: hold for 3 seconds to open settings */
+  #esquina {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 110px;
+    height: 110px;
+    z-index: 5;
+  }
+
+  /* Settings panel (for family, not for grandma) */
+  #ajustes {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-justify-content: center;
+    justify-content: center;
+    -webkit-align-items: center;
+    align-items: center;
+  }
+  #ajustes .caja {
+    background: #ffffff;
+    color: #111111;
+    border-radius: 16px;
+    padding: 24px 28px;
+    width: 90%;
+    max-width: 560px;
+    box-sizing: border-box;
+    font-size: 20px;
+  }
+  #ajustes h2 { margin: 0 0 16px; font-size: 26px; }
+  #ajustes h3 { margin: 20px 0 10px; font-size: 20px; }
+  .temas { overflow: hidden; }
+  .tema-btn {
+    float: left;
+    width: 30%;
+    margin: 0 3% 3% 0;
+    padding: 14px 4px;
+    border: 3px solid #cccccc;
+    border-radius: 10px;
+    font-size: 17px;
+    font-weight: 600;
+    -webkit-appearance: none;
+    cursor: pointer;
+  }
+  .tema-btn.activo { border-color: #1565c0; box-shadow: 0 0 0 3px #90caf9; }
+  .fila {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-justify-content: space-between;
+    justify-content: space-between;
+    padding: 6px 0;
+  }
+  .interruptor {
+    -webkit-appearance: none;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 10px 22px;
+    border-radius: 10px;
+    border: 2px solid #999999;
+    background: #eeeeee;
+    color: #333333;
+    min-width: 90px;
+    cursor: pointer;
+  }
+  .interruptor.encendido { background: #2e7d32; border-color: #2e7d32; color: #ffffff; }
+  #cerrar {
+    -webkit-appearance: none;
+    display: block;
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    font-size: 20px;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    background: #1565c0;
+    color: #ffffff;
+    cursor: pointer;
+  }
+  .nota { font-size: 14px; color: #666666; margin-top: 12px; }
+</style>
+</head>
+<body class="tema-crema">
+
+<div id="pantalla">
+  <p class="linea" id="hoy-es">Hoy es</p>
+  <p class="linea" id="dia"></p>
+  <p class="linea" id="fecha"></p>
+  <p class="linea" id="momento"></p>
+  <p class="linea" id="reloj"></p>
+</div>
+
+<div id="esquina" aria-hidden="true"></div>
+
+<div id="ajustes" class="oculto">
+  <div class="caja">
+    <h2>Settings</h2>
+
+    <h3>Colours</h3>
+    <div class="temas" id="temas"></div>
+
+    <h3>Show</h3>
+    <div class="fila">
+      <span>Clock</span>
+      <button class="interruptor" id="btn-reloj" type="button"></button>
+    </div>
+    <div class="fila">
+      <span>Morning / afternoon / night</span>
+      <button class="interruptor" id="btn-momento" type="button"></button>
+    </div>
+
+    <button id="cerrar" type="button">Done</button>
+    <p class="nota">Opens by holding the top-right corner for 3 seconds. Closes by itself after 1 minute.</p>
+  </div>
+</div>
+
+<script>
+// Written in plain ES5 so it runs on Safari for iOS 12.
+(function () {
+  'use strict';
+
+  // Spanish names are written out by hand so the text never depends on
+  // the iPad's language settings.
+  var DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+               'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+  var TEMAS = [
+    { id: 'crema',    nombre: 'Cream',  bg: '#fdf6e3', fg: '#1a1a1a' },
+    { id: 'noche',    nombre: 'Night',  bg: '#000000', fg: '#ffffff' },
+    { id: 'azul',     nombre: 'Blue',   bg: '#0d2a5c', fg: '#ffffff' },
+    { id: 'amarillo', nombre: 'Yellow', bg: '#ffe14d', fg: '#000000' },
+    { id: 'verde',    nombre: 'Green',  bg: '#1b4d2e', fg: '#ffffff' },
+    { id: 'rosa',     nombre: 'Pink',   bg: '#fde4ec', fg: '#3b0a1e' }
+  ];
+
+  var ajustes = { tema: 'crema', reloj: true, momento: true };
+
+  function $(id) { return document.getElementById(id); }
+
+  // ---- Saved settings (localStorage can throw in private mode) ----
+  function cargar() {
+    try {
+      var guardado = JSON.parse(window.localStorage.getItem('ajustes') || '{}');
+      if (typeof guardado.tema === 'string') ajustes.tema = guardado.tema;
+      if (typeof guardado.reloj === 'boolean') ajustes.reloj = guardado.reloj;
+      if (typeof guardado.momento === 'boolean') ajustes.momento = guardado.momento;
+    } catch (e) { /* keep defaults */ }
+  }
+  function guardar() {
+    try { window.localStorage.setItem('ajustes', JSON.stringify(ajustes)); } catch (e) { }
+  }
+
+  // Test hook: index.html?prueba=2026-09-30T08:05 shows that moment instead of now.
+  var desfase = 0;
+  var prueba = /[?&]prueba=([0-9T:-]+)/.exec(window.location.search);
+  if (prueba) {
+    var p = prueba[1].split(/[-T:]/);
+    desfase = new Date(+p[0], +p[1] - 1, +p[2], +(p[3] || 0), +(p[4] || 0)).getTime() - Date.now();
+  }
+
+  // ---- What the screen says ----
+  function momentoDelDia(hora) {
+    if (hora >= 5 && hora < 12) return 'Es de mañana';
+    if (hora >= 12 && hora < 20) return 'Es de tarde';
+    return 'Es de noche';
+  }
+
+  function horaDoce(ahora) {
+    var h = ahora.getHours();
+    var m = ahora.getMinutes();
+    var sufijo = h < 12 ? 'a. m.' : 'p. m.';
+    h = h % 12;
+    if (h === 0) h = 12;
+    return h + ':' + (m < 10 ? '0' : '') + m + ' ' + sufijo;
+  }
+
+  var ultimo = '';
+  function actualizar() {
+    var ahora = new Date(Date.now() + desfase);
+    // Only touch the page when the minute (or a setting) has changed.
+    var clave = ahora.getFullYear() + '-' + ahora.getMonth() + '-' + ahora.getDate() +
+                ' ' + ahora.getHours() + ':' + ahora.getMinutes() +
+                ' ' + ajustes.reloj + ajustes.momento;
+    if (clave === ultimo) return;
+    ultimo = clave;
+
+    $('dia').textContent = DIAS[ahora.getDay()];
+    $('fecha').textContent = ahora.getDate() + ' de ' + MESES[ahora.getMonth()] + ' de ' + ahora.getFullYear();
+    $('momento').textContent = momentoDelDia(ahora.getHours());
+    $('reloj').textContent = horaDoce(ahora);
+
+    $('momento').className = 'linea' + (ajustes.momento ? '' : ' oculto');
+    $('reloj').className = 'linea' + (ajustes.reloj ? '' : ' oculto');
+
+    caber($('dia'), 17);
+    caber($('fecha'), 8);
+  }
+
+  // Shrink a line until it fits the screen width (e.g. "MIÉRCOLES" upright).
+  function caber(el, base) {
+    var max = $('pantalla').clientWidth * 0.92;
+    var tam = base;
+    el.style.fontSize = tam + 'vmin';
+    while (el.offsetWidth > max && tam > 3) {
+      tam -= 0.5;
+      el.style.fontSize = tam + 'vmin';
+    }
+  }
+
+  // Redo the layout when the iPad is turned.
+  function alGirar() {
+    ultimo = '';
+    setTimeout(actualizar, 300);
+  }
+
+  // ---- Colours ----
+  function aplicarTema() {
+    document.body.className = 'tema-' + ajustes.tema;
+    var botones = $('temas').getElementsByTagName('button');
+    for (var i = 0; i < botones.length; i++) {
+      var activo = botones[i].getAttribute('data-tema') === ajustes.tema;
+      botones[i].className = 'tema-btn' + (activo ? ' activo' : '');
+    }
+  }
+
+  function crearBotonesTema() {
+    var contenedor = $('temas');
+    for (var i = 0; i < TEMAS.length; i++) {
+      var t = TEMAS[i];
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = t.nombre;
+      b.style.background = t.bg;
+      b.style.color = t.fg;
+      b.setAttribute('data-tema', t.id);
+      b.onclick = function () {
+        ajustes.tema = this.getAttribute('data-tema');
+        guardar();
+        aplicarTema();
+        reiniciarCierre();
+      };
+      contenedor.appendChild(b);
+    }
+  }
+
+  // ---- On/off switches ----
+  function pintarInterruptor(id, encendido) {
+    var b = $(id);
+    b.textContent = encendido ? 'On' : 'Off';
+    b.className = 'interruptor' + (encendido ? ' encendido' : '');
+  }
+  function pintarInterruptores() {
+    pintarInterruptor('btn-reloj', ajustes.reloj);
+    pintarInterruptor('btn-momento', ajustes.momento);
+  }
+
+  // ---- Settings panel ----
+  var cierreAuto = null;
+  function abrirAjustes() {
+    $('ajustes').className = '';
+    reiniciarCierre();
+  }
+  function cerrarAjustes() {
+    $('ajustes').className = 'oculto';
+    clearTimeout(cierreAuto);
+  }
+  // Close the panel by itself so it never stays open on grandma's screen.
+  function reiniciarCierre() {
+    clearTimeout(cierreAuto);
+    cierreAuto = setTimeout(cerrarAjustes, 60000);
+  }
+
+  // ---- Hold the hidden corner for 3 seconds ----
+  function prepararEsquina() {
+    var esquina = $('esquina');
+    var temporizador = null;
+    function empezar(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      clearTimeout(temporizador);
+      temporizador = setTimeout(abrirAjustes, 3000);
+    }
+    function cancelar() { clearTimeout(temporizador); }
+    esquina.addEventListener('touchstart', empezar, false);
+    esquina.addEventListener('touchend', cancelar, false);
+    esquina.addEventListener('touchcancel', cancelar, false);
+    esquina.addEventListener('touchmove', cancelar, false);
+    // Mouse too, for testing on a computer
+    esquina.addEventListener('mousedown', empezar, false);
+    esquina.addEventListener('mouseup', cancelar, false);
+    esquina.addEventListener('mouseleave', cancelar, false);
+  }
+
+  function iniciar() {
+    cargar();
+    crearBotonesTema();
+    aplicarTema();
+    pintarInterruptores();
+    prepararEsquina();
+
+    $('btn-reloj').onclick = function () {
+      ajustes.reloj = !ajustes.reloj;
+      guardar(); pintarInterruptores(); actualizar(); reiniciarCierre();
+    };
+    $('btn-momento').onclick = function () {
+      ajustes.momento = !ajustes.momento;
+      guardar(); pintarInterruptores(); actualizar(); reiniciarCierre();
+    };
+    $('cerrar').onclick = cerrarAjustes;
+
+    // Stop pinch-zoom and double-tap zoom, which Safari allows despite the meta tag.
+    document.addEventListener('gesturestart', function (e) { e.preventDefault(); }, false);
+
+    actualizar();
+    // Check every 5 seconds. Cheap, and the screen catches up within
+    // seconds after the iPad wakes from sleep (timers pause while asleep).
+    setInterval(actualizar, 5000);
+    document.addEventListener('visibilitychange', actualizar, false);
+    window.addEventListener('pageshow', actualizar, false);
+    window.addEventListener('focus', actualizar, false);
+    window.addEventListener('resize', alGirar, false);
+    window.addEventListener('orientationchange', alGirar, false);
+  }
+
+  iniciar();
+})();
+</script>
+</body>
+</html>
